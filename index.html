@@ -2,185 +2,38 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Three.js GLTF Loader</title>
+    <title>Play Animation</title>
     <style>
         body { margin: 0; }
         canvas { display: block; }
-        button { position: absolute; top: 10px; z-index: 100; }
-        #play3rd { left: 10px; }
-        #play7th { left: 120px; }
-        #prev { left: 10px; display: none; }
-        #next { left: 120px; display: none; }
+        button { position: absolute; top: 10px; left: 10px; z-index: 100; font-size: 18px; padding: 10px 20px; cursor: pointer; }
+        #nextButton { left: 150px; }
+        #prevButton { left: 290px; }
     </style>
 </head>
 <body>
-    <button id="play3rd">Play 3rd Animation</button>
-    <button id="play7th">Play 7th Animation</button>
-    <button id="prev">Previous</button>
-    <button id="next">Next</button>
+    <button onclick="window.location.href='index.html'">Back to Menu</button>
+    <button id="prevButton">Previous Animation</button>
+    <button id="nextButton">Next Animation</button>
+    
     <script src="three.js"></script>
     <script src="GLTFLoader.js"></script>
-
     <script>
-        try {
-            // Initialize variables
-            let scene, camera, renderer, mixer, model, activeAction, clock;
-            const animations = [];
-            let currentAnimationIndex = 0;
-            const buttons = {
-                play3rd: document.getElementById('play3rd'),
-                play7th: document.getElementById('play7th'),
-                prev: document.getElementById('prev'),
-                next: document.getElementById('next')
-            };
+        // Fetch the animation index from the URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const animationIndex = parseInt(urlParams.get('animationIndex'), 10); // 3rd animation -> 2, 7th animation -> 6
 
-            // Initialize Three.js environment
-            function initScene() {
-                scene = new THREE.Scene();
-                camera = new THREE.PerspectiveCamera(5, window.innerWidth / window.innerHeight, 0.1, 1000);
-                camera.position.set(1, 30, 50);
-                camera.lookAt(0.3, 5.5, 0);
+        let scene, camera, renderer, mixer, model, clock, activeAction, animations;
+        let currentAnimationIndex = animationIndex;
 
-                renderer = new THREE.WebGLRenderer();
-                renderer.setClearColor(0x000000);
-                renderer.setPixelRatio(window.devicePixelRatio);
-                renderer.setSize(window.innerWidth, window.innerHeight);
-                document.body.appendChild(renderer.domElement);
-
-                const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-                scene.add(ambientLight);
-
-                const pointLight = new THREE.PointLight(0xffffff, 0.5);
-                pointLight.position.set(50, 50, 50);
-                scene.add(pointLight);
-
-                clock = new THREE.Clock();
-
-                window.addEventListener('resize', () => {
-                    camera.aspect = window.innerWidth / window.innerHeight;
-                    camera.updateProjectionMatrix();
-                    renderer.setSize(window.innerWidth, window.innerHeight);
-                });
-            }
-
-            // Load the GLTF model and play the specified animation
-            function loadModelAndPlay(animationIndex) {
-                const loader = new THREE.GLTFLoader();
-                loader.load('model/scene.gltf', (gltf) => {
-                    model = gltf.scene;
-                    scene.add(model);
-                    model.position.z = -10;
-
-                    if (gltf.animations.length > 0) {
-                        mixer = new THREE.AnimationMixer(model);
-                        gltf.animations.forEach((clip) => animations.push(clip));
-                        currentAnimationIndex = animationIndex;
-                        playAnimation(currentAnimationIndex);
-                        showNavigationButtons();
-                    }
-                }, undefined, (error) => {
-                    console.error('Error loading model:', error);
-                });
-            }
-
-            // Play the animation at the specified index
-            function playAnimation(index) {
-                if (index < 0 || index >= animations.length) {
-                    console.warn(`Animation index ${index} is out of bounds.`);
-                    return;
-                }
-                if (activeAction) activeAction.stop(); // Stop the current animation
-                activeAction = mixer.clipAction(animations[index]); // Play the new animation
-                activeAction.play();
-            }
-
-            // Animation loop
-            function animate() {
-                requestAnimationFrame(animate);
-                if (mixer) {
-                    mixer.update(clock.getDelta());
-                }
-                renderer.render(scene, camera);
-            }
-
-            // Button events
-            buttons.play3rd.addEventListener('click', () => {
-                hideInitialButtons();
-                initScene();
-                loadModelAndPlay(2); // Play 3rd animation (index 2)
-                animate();
-            });
-
-            buttons.play7th.addEventListener('click', () => {
-                hideInitialButtons();
-                initScene();
-                loadModelAndPlay(6); // Play 7th animation (index 6)
-                animate();
-            });
-
-            buttons.prev.addEventListener('click', () => {
-                currentAnimationIndex = (currentAnimationIndex - 1 + animations.length) % animations.length;
-                playAnimation(currentAnimationIndex);
-            });
-
-            buttons.next.addEventListener('click', () => {
-                currentAnimationIndex = (currentAnimationIndex + 1) % animations.length;
-                playAnimation(currentAnimationIndex);
-            });
-
-            // Hide initial buttons
-            function hideInitialButtons() {
-                buttons.play3rd.style.display = 'none';
-                buttons.play7th.style.display = 'none';
-            }
-
-            // Show navigation buttons
-            function showNavigationButtons() {
-                buttons.prev.style.display = 'block';
-                buttons.next.style.display = 'block';
-            }
-
-        } catch (e) {
-            console.error('An error occurred:', e);
-        }
-    </script>
-</body>
-</html>
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>Three.js GLTF Loader</title>
-    <style>
-        body { margin: 0; }
-        canvas { display: block; }
-        button { position: absolute; top: 10px; z-index: 100; }
-        #toggleAnimation { left: 10px; }
-        #next { left: 180px; }
-        #previous { left: 340px; }
-        #thirdAnimation { left: 530px; }
-        #seventhAnimation { left: 730px; }
-    </style>
-</head>
-<body>
-    <button id="toggleAnimation">Start Animation</button>
-    <button id="next">Next Animation</button>
-    <button id="previous">Previous Animation</button>
-    <button id="thirdAnimation">Play 3rd Animation</button>
-    <button id="seventhAnimation">Play 7th Animation</button>
-    <script src="three.js"></script>
-    <script src="GLTFLoader.js"></script>
-
-    <script>
-        try {
-            // Initialize scene, camera, and renderer
-            const scene = new THREE.Scene();
-
-            const camera = new THREE.PerspectiveCamera(5, window.innerWidth / window.innerHeight, 0.1, 1000);
+        (function () {
+            // Initialize the scene, camera, and renderer
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(5, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.position.set(1, 30, 50);
             camera.lookAt(0.3, 5.5, 0);
 
-            const renderer = new THREE.WebGLRenderer();
+            renderer = new THREE.WebGLRenderer();
             renderer.setClearColor(0x000000);
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(window.innerWidth, window.innerHeight);
@@ -194,105 +47,56 @@
             pointLight.position.set(50, 50, 50);
             scene.add(pointLight);
 
-            // Variables for model and animation
-            const loader = new THREE.GLTFLoader();
-            let model, mixer, animations = [], activeAction, currentAnimationIndex = 0, animationsPlaying = false;
+            clock = new THREE.Clock();
 
-            // Load the GLTF model
+            // Load Model and Animations
+            const loader = new THREE.GLTFLoader();
             loader.load('model/scene.gltf', (gltf) => {
                 model = gltf.scene;
+                animations = gltf.animations;
                 scene.add(model);
                 model.position.z = -10;
 
-                // Setup animation mixer and store animations
-                if (gltf.animations.length > 0) {
-                    mixer = new THREE.AnimationMixer(model);
-                    animations = gltf.animations;
+                mixer = new THREE.AnimationMixer(model);
+                loadAnimation(currentAnimationIndex);
 
-                    // Start the first animation
-                    playAnimation(currentAnimationIndex);
-                }
-            }, undefined, (error) => {
-                console.error('Error loading model:', error);
+                // Add event listeners for buttons
+                document.getElementById('prevButton').addEventListener('click', prevAnimation);
+                document.getElementById('nextButton').addEventListener('click', nextAnimation);
             });
 
-            // Handle window resizing
-            window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            });
+            window.addEventListener('resize', onWindowResize);
+            animate();
+        })();
 
-            // Play an animation by index
-            function playAnimation(index) {
-                if (index < 0 || index >= animations.length) {
-                    console.warn(`Animation index ${index} is out of bounds.`);
-                    return;
-                }
-                if (activeAction) activeAction.stop(); // Stop the currently playing animation
-                activeAction = mixer.clipAction(animations[index]); // Play the new animation
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function loadAnimation(index) {
+            if (mixer && animations.length > 0) {
+                if (activeAction) activeAction.stop();
+                activeAction = mixer.clipAction(animations[index]);
                 activeAction.play();
             }
+        }
 
-            // Animation loop
-            const clock = new THREE.Clock();
-            function animate() {
-                requestAnimationFrame(animate);
+        function prevAnimation() {
+            currentAnimationIndex = (currentAnimationIndex - 1 + animations.length) % animations.length;
+            loadAnimation(currentAnimationIndex);
+        }
 
-                if (mixer && animationsPlaying) {
-                    mixer.update(clock.getDelta());
-                }
+        function nextAnimation() {
+            currentAnimationIndex = (currentAnimationIndex + 1) % animations.length;
+            loadAnimation(currentAnimationIndex);
+        }
 
-                renderer.render(scene, camera);
-            }
-            animate();
-
-            // Button controls
-            const toggleButton = document.getElementById('toggleAnimation');
-            const nextButton = document.getElementById('next');
-            const previousButton = document.getElementById('previous');
-            const thirdButton = document.getElementById('thirdAnimation');
-            const seventhButton = document.getElementById('seventhAnimation');
-
-            toggleButton.addEventListener('click', () => {
-                animationsPlaying = !animationsPlaying;
-                toggleButton.textContent = animationsPlaying ? 'Stop Animation' : 'Start Animation';
-            });
-
-            nextButton.addEventListener('click', () => {
-                if (animations.length > 0) {
-                    currentAnimationIndex = (currentAnimationIndex + 1) % animations.length;
-                    playAnimation(currentAnimationIndex);
-                }
-            });
-
-            previousButton.addEventListener('click', () => {
-                if (animations.length > 0) {
-                    currentAnimationIndex = (currentAnimationIndex - 1 + animations.length) % animations.length;
-                    playAnimation(currentAnimationIndex);
-                }
-            });
-
-            thirdButton.addEventListener('click', () => {
-                if (animations.length >= 3) {
-                    currentAnimationIndex = 2; // 3rd animation (0-based index)
-                    playAnimation(currentAnimationIndex);
-                } else {
-                    console.warn("The model does not have a 3rd animation.");
-                }
-            });
-
-            seventhButton.addEventListener('click', () => {
-                if (animations.length >= 7) {
-                    currentAnimationIndex = 6; // 7th animation (0-based index)
-                    playAnimation(currentAnimationIndex);
-                } else {
-                    console.warn("The model does not have a 7th animation.");
-                }
-            });
-
-        } catch (e) {
-            console.error('An error occurred:', e);
+        function animate() {
+            requestAnimationFrame(animate);
+            if (mixer) mixer.update(clock.getDelta());
+            renderer.render(scene, camera);
         }
     </script>
 </body>
